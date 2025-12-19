@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Camera, RefreshCcw, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Camera, RefreshCcw, ShieldCheck, AlertCircle, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CameraCaptureProps {
@@ -62,22 +62,46 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, status = 'idle
     return (
         <div className="relative w-full max-w-2xl mx-auto">
             {/* Camera Preview Container */}
-            <div className="relative rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl aspect-video bg-black">
+            <div className="relative rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] aspect-video bg-slate-900 group">
                 <video
                     ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover mirror"
+                    className="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
                     style={{ transform: 'scaleX(-1)' }}
                 />
 
-                {/* Overlay scanning effect */}
+                {/* Cyberpunk UI Overlays */}
                 <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-primary/40 animate-scan shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+                    {/* Corners */}
+                    <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-primary/50" />
+                    <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-primary/50" />
+                    <div className="absolute bottom-8 left-8 w-8 h-8 border-b-2 border-l-2 border-primary/50" />
+                    <div className="absolute bottom-8 right-8 w-8 h-8 border-b-2 border-r-2 border-primary/50" />
+
+                    {/* Scanning Line */}
+                    <div className="scanline" />
 
                     {/* Face Guide Frame */}
-                    <div className="absolute inset-x-1/4 inset-y-1/6 border-2 border-dashed border-white/30 rounded-[3rem] animate-pulse" />
+                    <div className="absolute inset-x-[25%] inset-y-[15%] border border-primary/20 rounded-[3rem] bg-primary/5 backdrop-blur-[1px] flex items-center justify-center">
+                        <div className="w-full h-full relative">
+                            <Scan className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 text-primary/10 animate-pulse" />
+                        </div>
+                    </div>
+
+                    {/* Meta Data */}
+                    <div className="absolute bottom-6 left-10 flex gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-primary/60 font-mono uppercase tracking-[0.2em]">Neural Feed</span>
+                            <span className="text-[10px] text-white font-mono uppercase">720P / 30FPS</span>
+                        </div>
+                        <div className="w-[1px] h-8 bg-white/10" />
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-primary/60 font-mono uppercase tracking-[0.2em]">Status</span>
+                            <span className="text-[10px] text-green-400 font-mono uppercase">Live Connection</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Status Overlays */}
@@ -87,74 +111,73 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, status = 'idle
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center text-white"
                         >
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-white">
-                                <RefreshCcw className="w-12 h-12 animate-spin mb-4 text-primary" />
-                                <p className="text-lg font-medium tracking-wide">Analysing Biometrics...</p>
+                            <div className="relative">
+                                <div className="w-24 h-24 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                                <RefreshCcw className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-primary" />
                             </div>
+                            <p className="mt-6 text-sm font-bold uppercase tracking-[0.3em] text-primary">Analysing Biometrics</p>
+                            <div className="mt-2 text-[10px] text-white/40 font-mono">ENCRYPTING TEMPLATE...</div>
                         </motion.div>
                     )}
 
                     {status === 'success' && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-green-500/10 backdrop-blur-sm flex flex-col items-center justify-center text-white"
                         >
-                            <div className="absolute inset-0 bg-green-500/20 backdrop-blur-sm flex flex-col items-center justify-center text-white">
-                                <ShieldCheck className="w-16 h-16 mb-4 text-green-400" />
-                                <p className="text-xl font-bold uppercase tracking-widest">Access Granted</p>
+                            <div className="w-20 h-20 rounded-full bg-green-500/20 border border-green-500/50 flex items-center justify-center mb-4">
+                                <ShieldCheck className="w-10 h-10 text-green-400" />
                             </div>
+                            <p className="text-xl font-black uppercase tracking-widest text-glow">Identity Confirmed</p>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {error && (
-                    <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-center p-6 text-white">
+                    <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center text-center p-6 text-white">
                         <AlertCircle className="w-12 h-12 mb-4 text-red-500" />
                         <p className="text-lg font-medium">{error}</p>
                         <button
                             onClick={startCamera}
-                            className="mt-4 px-6 py-2 bg-primary rounded-full hover:bg-primary/80 transition-all font-semibold"
+                            className="mt-6 px-8 py-3 bg-primary text-slate-950 rounded-full hover:bg-white transition-all font-bold uppercase text-xs tracking-widest"
                         >
-                            Retry
+                            Restore Feed
                         </button>
                     </div>
                 )}
             </div>
 
             {/* Control Panel */}
-            <div className="mt-8 flex justify-center gap-6">
+            <div className="mt-10 flex flex-col items-center">
                 <button
                     onClick={captureFrame}
                     disabled={status === 'processing'}
-                    className="group relative flex items-center justify-center p-6 rounded-full bg-white text-black shadow-xl hover:scale-110 transition-all disabled:opacity-50 disabled:scale-100"
+                    className="relative px-12 py-5 rounded-full bg-primary text-slate-950 font-black uppercase tracking-[0.2em] text-sm overflow-hidden group/btn transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
                 >
-                    <Camera className="w-8 h-8" />
-                    <span className="absolute -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-                        Identify Now
+                    <span className="relative z-10 flex items-center gap-3">
+                        <Camera className="w-5 h-5" />
+                        Capture Biometrics
                     </span>
+                    <div className="absolute inset-0 bg-white scale-x-0 group-hover/btn:scale-x-100 transition-transform origin-left" />
                 </button>
+
+                {message && (
+                    <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`mt-6 text-xs font-bold uppercase tracking-[0.2em] ${status === 'error' ? 'text-red-400' : 'text-primary/60'}`}
+                    >
+                        {message}
+                    </motion.p>
+                )}
             </div>
 
             {/* Hidden Canvas for capture */}
             <canvas ref={canvasRef} className="hidden" />
-
-            {message && (
-                <p className={`mt-4 text-center text-sm font-medium ${status === 'error' ? 'text-red-400' : 'text-primary/80'}`}>
-                    {message}
-                </p>
-            )}
-
-            <style jsx>{`
-        @keyframes scan {
-          0% { top: 0%; }
-          100% { top: 100%; }
-        }
-        .animate-scan {
-          animation: scan 2s linear infinite;
-        }
-      `}</style>
         </div>
     );
 };
