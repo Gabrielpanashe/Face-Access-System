@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-// Use widely available Google fonts instead of a non-existent "Geist" export
-const inter = Inter({
-  variable: "--font-inter",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
@@ -14,8 +13,8 @@ const jetMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Face Access System",
-  description: "Biometric enrollment and verification UI",
+  title: "SDR Biometrics | Neural Gate Access",
+  description: "Advanced biometric access control with real-time neural processing.",
 };
 
 export default function RootLayout({
@@ -25,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <body className={`${inter.variable} ${jetMono.variable} antialiased`}>
+      <body className={`${outfit.variable} ${jetMono.variable} antialiased`}>
         {children}
       </body>
     </html>
