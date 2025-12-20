@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Camera, RefreshCcw, ShieldCheck, AlertCircle, Scan, Activity, Target } from 'lucide-react';
+import { Camera, ShieldCheck, AlertCircle, Activity, Target, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CameraCaptureProps {
@@ -32,6 +32,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, status = 'idle
         return () => clearInterval(interval);
     }, []);
 
+    const stopCamera = useCallback(() => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+    }, [stream]);
+
     const startCamera = useCallback(async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -56,11 +63,18 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, status = 'idle
     useEffect(() => {
         startCamera();
         return () => {
+            // Internal stop logic
+        };
+    }, [startCamera]);
+
+    // Explicit cleanup for stream
+    useEffect(() => {
+        return () => {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, [startCamera]);
+    }, [stream]);
 
     const captureFrame = () => {
         if (videoRef.current && canvasRef.current) {
@@ -241,16 +255,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, status = 'idle
             </div>
 
             <canvas ref={canvasRef} className="hidden" />
-
-            <style jsx>{`
-                .animate-spin-slow {
-                    animation: spin 10s linear infinite;
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     );
 };

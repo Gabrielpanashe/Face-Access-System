@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Shield, UserPlus, Fingerprint, Lock, Cpu, Globe, ArrowRight, Activity, Zap, Server, Database } from 'lucide-react';
+import { UserPlus, Fingerprint, Lock, Cpu, ArrowRight, Activity, Zap, Server, Database } from 'lucide-react';
 import NeuralBackground from '@/components/NeuralBackground';
 
 export default function Home() {

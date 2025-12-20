@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import CameraCapture from '@/components/CameraCapture';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ShieldCheck, ShieldAlert, Fingerprint, Activity, Zap, Terminal, Lock, Globe, Power } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, ShieldAlert, Fingerprint, Zap, Terminal, Lock, Globe, Power } from 'lucide-react';
 import NeuralBackground from '@/components/NeuralBackground';
 
 export default function VerifyPage() {
     const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState('');
 
-    const handleCapture = async (imageData: string) => {
+    const handleCapture = async (_imageData: string) => {
         setStatus('processing');
         setMessage('Initializing neural gateway verification...');
 
@@ -19,7 +19,7 @@ export default function VerifyPage() {
             await new Promise(resolve => setTimeout(resolve, 3000));
             setStatus('success');
             setMessage('Identity Verified. Authorized Access Granted.');
-        } catch (err) {
+        } catch (_err) {
             setStatus('error');
             setMessage('Biometric anomaly detected. Access Denied.');
         }
@@ -173,6 +173,6 @@ export default function VerifyPage() {
             <div className="absolute top-1/2 left-0 -translate-y-1/2 text-[450px] font-black text-white/[0.012] pointer-events-none select-none tracking-tighter leading-none">
                 VFY
             </div>
-        </div>
+        </main>
     );
 }

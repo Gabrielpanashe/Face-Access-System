@@ -12,7 +12,7 @@ export default function EnrollPage() {
     const [message, setMessage] = useState('');
     const [userName, setUserName] = useState('');
 
-    const handleCapture = async (imageData: string) => {
+    const handleCapture = async (_imageData: string) => {
         if (!userName) {
             setStatus('error');
             setMessage('Identity label required before enrollment.');
@@ -26,7 +26,7 @@ export default function EnrollPage() {
             await new Promise(resolve => setTimeout(resolve, 3000));
             setStatus('success');
             setMessage(`Biometric profile for "${userName}" successfully registered.`);
-        } catch (err) {
+        } catch (_err) {
             setStatus('error');
             setMessage('Failed to register biometric profile.');
         }
