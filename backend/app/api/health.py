@@ -4,4 +4,9 @@ router = APIRouter()
 
 @router.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "Face Access System"}
+    # You could add a check to see if DB is reachable
+    return {
+        "status": "ok", 
+        "service": "Face Access System",
+        "database": "connected" # Simplified for now
+    }

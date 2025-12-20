@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     
     # Storage
     DATASET_PATH: str = "ml/liveness/dataset"
-    ENROLLMENT_DB_PATH: str = "app/database/face_db"
+    DATABASE_URL: str = "sqlite:///./data/face_access.db"
     
     class Config:
         env_file = ".env"

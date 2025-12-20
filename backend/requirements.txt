@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+sqlalchemy
+sqlalchemy-utils
+pydantic-settings
+numpy
+opencv-python
+deepface
