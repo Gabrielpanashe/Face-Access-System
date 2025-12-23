@@ -3,11 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import health, verify, enroll, logs
 from app.db import models
 from app.db.database import engine
+from app.core.face_utils import preload_models
+import threading
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Face Access System API")
+
+# Pre-load models in a background thread to not block startup
+threading.Thread(target=preload_models, daemon=True).start()
 
 # Configure CORS
 app.add_middleware(

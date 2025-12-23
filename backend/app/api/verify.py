@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db import models
-from app.core.face_utils import decode_image, get_face_embedding, verify_face
+from app.core.face_utils import decode_image, get_face_embedding, verify_face, extract_face, perform_liveness_check
 import logging
 
 router = APIRouter()
@@ -15,8 +15,22 @@ async def verify_user(image: str = Form(...), db: Session = Depends(get_db)):
     if img is None:
         raise HTTPException(status_code=400, detail="Invalid image data")
 
-    # 2. Extract embedding from probe image
-    probe_embedding = get_face_embedding(img)
+    # 1.5 Liveness Check
+    face_img = extract_face(img)
+    if face_img is not None:
+        is_live, liveness_conf = perform_liveness_check(face_img)
+        if not is_live:
+            logger.warning(f"Spoof Attempt Detected! Liveness confidence: {liveness_conf}")
+            return {
+                "status": "denied",
+                "identity": "Spoof Machine",
+                "message": "Access Denied: Spoof Detected",
+                "access": False,
+                "liveness_confidence": float(liveness_conf)
+            }
+    
+    # 2. Extract embedding from probe image (FASTER)
+    probe_embedding = get_face_embedding(face_img if face_img is not None else img)
     if probe_embedding is None:
         return {
             "status": "denied",

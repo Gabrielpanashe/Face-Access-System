@@ -36,3 +36,7 @@ frontend/build/
 # OS
 .DS_Store
 Thumbs.db
+
+# App specific
+backend/data/*.db
+backend/ml_model/data/

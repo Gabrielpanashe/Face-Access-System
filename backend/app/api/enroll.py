@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db import models
-from app.core.face_utils import decode_image, get_face_embedding
+from app.core.face_utils import decode_image, get_face_embedding, extract_face, perform_liveness_check
 import logging
 
 router = APIRouter()
@@ -15,8 +15,16 @@ async def enroll_face(name: str = Form(...), image: str = Form(...), db: Session
     if img is None:
         raise HTTPException(status_code=400, detail="Invalid image data")
 
-    # 2. Extract facial embeddings
-    embedding = get_face_embedding(img)
+    # 1.5 Liveness Check
+    face_img = extract_face(img)
+    if face_img is not None:
+        is_live, confidence = perform_liveness_check(face_img)
+        if not is_live:
+            logger.warning(f"Liveness Check Failed during enrollment for {name}. Confidence: {confidence}")
+            raise HTTPException(status_code=403, detail="Liveness check failed. Please use a real face.")
+    
+    # 2. Extract facial embeddings using the already-extracted face (FASTER)
+    embedding = get_face_embedding(face_img if face_img is not None else img)
     if embedding is None:
         raise HTTPException(status_code=400, detail="No face detected or could not extract embedding")
 
