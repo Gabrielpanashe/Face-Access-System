@@ -24,7 +24,7 @@ async def verify_user(image: str = Form(...), db: Session = Depends(get_db)):
             return {
                 "status": "denied",
                 "identity": "Spoof Machine",
-                "message": "Access Denied: Spoof Detected",
+                "message": "NOT a REAL face",
                 "access": False,
                 "liveness_confidence": float(liveness_conf)
             }
@@ -35,7 +35,7 @@ async def verify_user(image: str = Form(...), db: Session = Depends(get_db)):
         return {
             "status": "denied",
             "identity": "Unknown",
-            "message": "No face detected",
+            "message": "Access denied, unregistered face",
             "access": False
         }
 
@@ -45,7 +45,7 @@ async def verify_user(image: str = Form(...), db: Session = Depends(get_db)):
         return {
             "status": "denied",
             "identity": "Unknown",
-            "message": "No users registered",
+            "message": "Access denied, unregistered face",
             "access": False
         }
 
@@ -77,6 +77,7 @@ async def verify_user(image: str = Form(...), db: Session = Depends(get_db)):
         return {
             "status": "denied",
             "identity": "Unknown",
+            "message": "Access denied, unregistered face",
             "match_confidence": (1.0 - distance),
             "access": False
         }

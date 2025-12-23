@@ -21,7 +21,7 @@ async def enroll_face(name: str = Form(...), image: str = Form(...), db: Session
         is_live, confidence = perform_liveness_check(face_img)
         if not is_live:
             logger.warning(f"Liveness Check Failed during enrollment for {name}. Confidence: {confidence}")
-            raise HTTPException(status_code=403, detail="Liveness check failed. Please use a real face.")
+            raise HTTPException(status_code=403, detail="NOT a REAL face")
     
     # 2. Extract facial embeddings using the already-extracted face (FASTER)
     embedding = get_face_embedding(face_img if face_img is not None else img)
@@ -40,6 +40,26 @@ async def enroll_face(name: str = Form(...), image: str = Form(...), db: Session
         db.add(new_user)
         message = f"Biometric profile for {name} registered."
     
+    # SAVE FACE IMAGE FOR ADMIN VERIFICATION
+    import cv2
+    import os
+    try:
+        faces_dir = "data/faces"
+        if not os.path.exists(faces_dir):
+            os.makedirs(faces_dir)
+        
+        # Determine which image to save (cropped face preferred)
+        save_img = face_img if face_img is not None else img
+        
+        # Ensure name is safe for filesystem
+        safe_name = "".join([c for c in name if c.isalnum() or c in (' ', '-', '_')]).strip()
+        file_path = os.path.join(faces_dir, f"{safe_name}.jpg")
+        
+        cv2.imwrite(file_path, save_img)
+    except Exception as e:
+        logger.error(f"Failed to save reference image: {e}")
+        # Don't fail the whole request just for the image
+
     try:
         db.commit()
     except Exception as e:

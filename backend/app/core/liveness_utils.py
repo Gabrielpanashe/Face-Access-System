@@ -31,9 +31,10 @@ def check_liveness(face_img):
     """
     model = get_liveness_model()
     if model is None:
-        # If model is missing, we fail-safe by allowing (or you could reject)
-        # For security, you might want to return (False, 0.0)
-        return True, 1.0 
+        # SECURITY UPDATE: Fail-Secure
+        # If model is missing, we MUST deny access
+        print("Security Alert: Liveness model not loaded. Defaulting to DENY.")
+        return False, 0.0 
 
     try:
         # 1. Standardize size to 224x224 (matching training)
@@ -50,11 +51,14 @@ def check_liveness(face_img):
         
         # Based on training folder order (usually alphabetical):
         # real = 0, spoof = 1
-        # If prediction < 0.5, it's likely "Real"
-        is_live = prediction < 0.5
+        # SECURITY UPDATE: Stricter Threshold
+        # Used to be 0.5. Now 0.2. 
+        # The model must be 80% sure it's real (low spoof score) to pass.
+        is_live = prediction < 0.2
         confidence = 1.0 - prediction if is_live else prediction
         
         return bool(is_live), float(confidence)
     except Exception as e:
         print(f"Error during liveness check: {e}")
-        return True, 0.0 # Fail-safe
+        # SECURITY UPDATE: Fail-Secure on Error
+        return False, 0.0
