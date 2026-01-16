@@ -14,6 +14,26 @@ def get_face_cascade():
         _face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     return _face_cascade
 
+def apply_clahe(image):
+    """Applies Contrast Limited Adaptive Histogram Equalization to enhance low-light images."""
+    try:
+        if image is None: return None
+        # Convert to LAB color space
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        
+        # Apply CLAHE to L-channel
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+        cl = clahe.apply(l)
+        
+        # Merge channels and convert back to BGR
+        limg = cv2.merge((cl, a, b))
+        enhanced_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+        return enhanced_img
+    except Exception as e:
+        print(f"Error applying CLAHE: {e}")
+        return image
+
 def decode_image(base64_string: str):
     """Decodes a base64 string into an OpenCV image."""
     try:
@@ -30,24 +50,26 @@ def decode_image(base64_string: str):
         return None
 
 def extract_face(image):
-    """Detects and crops the face from an image. Optimized for speed."""
+    """Detects and crops the face from an image. Optimized for speed and low light."""
     try:
         if image is None: return None
         
-        # Performance optimization: Downscale image if it's too large
-        # This makes Haar Cascade detection much faster
-        height, width = image.shape[:2]
+        # 1. Enhance a COPY for better detection in low light
+        detect_img = apply_clahe(image.copy())
+        
+        # Performance optimization: Downscale detection image
+        height, width = detect_img.shape[:2]
         max_dim = 640
         scale = 1.0
         if max(height, width) > max_dim:
             scale = max_dim / max(height, width)
-            small_img = cv2.resize(image, (int(width * scale), int(height * scale)))
+            small_detect_img = cv2.resize(detect_img, (int(width * scale), int(height * scale)))
         else:
-            small_img = image
+            small_detect_img = detect_img
 
-        # Use cached Haar Cascade
+        # Use cached Haar Cascade on the enhanced smaller image
         face_cascade = get_face_cascade()
-        gray = cv2.cvtColor(small_img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(small_detect_img, cv2.COLOR_BGR2GRAY)
         
         # Detect on the smaller image
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
@@ -55,11 +77,11 @@ def extract_face(image):
         if len(faces) == 0:
             return None
             
-        # Pick the largest face and rescale coordinates back
+        # Pick the largest face and rescale coordinates back to original image
         x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
         x, y, w, h = int(x / scale), int(y / scale), int(w / scale), int(h / scale)
         
-        # Add padding (working on original high-res image for better embedding)
+        # Add padding
         padding_w = int(0.2 * w)
         padding_h = int(0.2 * h)
         y1 = max(0, y - padding_h)
@@ -67,6 +89,7 @@ def extract_face(image):
         x1 = max(0, x - padding_w)
         x2 = min(image.shape[1], x + w + padding_w)
         
+        # Crop from the ORIGINAL unenhanced image for Liveness/Recognition
         return image[y1:y2, x1:x2]
     except Exception as e:
         print(f"Error extracting face: {e}")
@@ -75,16 +98,15 @@ def extract_face(image):
 def get_face_embedding(image, model_name="Facenet"):
     """
     Extracts face embedding using DeepFace.
-    We pass detector_backend='skip' because we've already extracted/cropped the face.
-    This provides a massive speedup as it bypasses an entire neural network pass.
     """
     try:
-        # 'skip' is the fastest as it assumes the input IS the face
+        # Note: We rely on DeepFace's internal preprocessing
+        # Using 'mediapipe' which is robust for varied lighting
         embeddings = DeepFace.represent(
             img_path=image, 
             model_name=model_name, 
             enforce_detection=False,
-            detector_backend='skip'
+            detector_backend='mediapipe'
         )
         if embeddings:
             return embeddings[0]["embedding"]

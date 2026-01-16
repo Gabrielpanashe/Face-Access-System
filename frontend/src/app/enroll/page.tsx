@@ -10,11 +10,12 @@ export default function EnrollPage() {
     const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState('');
     const [userName, setUserName] = useState('');
+    const [pin, setPin] = useState('');
 
     const handleCapture = async (imageData: string) => {
-        if (!userName) {
+        if (!userName || !pin) {
             setStatus('error');
-            setMessage('Identity label required before enrollment.');
+            setMessage('Identity label and PIN required before enrollment.');
             return;
         }
 
@@ -25,6 +26,7 @@ export default function EnrollPage() {
             const formData = new FormData();
             formData.append('name', userName);
             formData.append('image', imageData);
+            formData.append('pin', pin);
 
             const response = await fetch('http://localhost:8000/api/enroll', {
                 method: 'POST',
@@ -95,6 +97,22 @@ export default function EnrollPage() {
                                     onChange={(e) => setUserName(e.target.value)}
                                 />
                                 <Database className="absolute right-10 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-700 group-focus-within:text-primary transition-colors" />
+                            </div>
+                        </div>
+
+                        <div className="relative group">
+                            <label className="hud-label block mb-4 ml-2">Security_PIN (4-6 Digits)</label>
+                            <div className="relative">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-accent to-primary rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-500"></div>
+                                <input
+                                    type="password"
+                                    maxLength={6}
+                                    placeholder="••••"
+                                    className="relative w-full bg-[#030712]/80 border border-white/10 rounded-2xl px-10 py-7 focus:outline-none focus:border-primary/50 transition-all text-white font-bold text-xl placeholder:text-slate-800 tracking-[1em]"
+                                    value={pin}
+                                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                                />
+                                <Lock className="absolute right-10 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-700 group-focus-within:text-primary transition-colors" />
                             </div>
                         </div>
 

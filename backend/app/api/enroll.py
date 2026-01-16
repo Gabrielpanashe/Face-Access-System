@@ -9,7 +9,12 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/enroll")
-async def enroll_face(name: str = Form(...), image: str = Form(...), db: Session = Depends(get_db)):
+async def enroll_face(
+    name: str = Form(...), 
+    image: str = Form(...), 
+    pin: str = Form(...),
+    db: Session = Depends(get_db)
+):
     # 1. Decode image
     img = decode_image(image)
     if img is None:
@@ -31,14 +36,15 @@ async def enroll_face(name: str = Form(...), image: str = Form(...), db: Session
     # 3. Check if user already exists
     existing_user = db.query(models.User).filter(models.User.name == name).first()
     if existing_user:
-        # Update existing user's embedding
+        # Update existing user's embedding and PIN
         existing_user.face_embedding = embedding
-        message = f"Biometric profile for {name} updated."
+        existing_user.pin = pin
+        message = f"Biometric profile and PIN for {name} updated."
     else:
         # Create new user
-        new_user = models.User(name=name, face_embedding=embedding)
+        new_user = models.User(name=name, face_embedding=embedding, pin=pin)
         db.add(new_user)
-        message = f"Biometric profile for {name} registered."
+        message = f"Biometric profile and PIN for {name} registered."
     
     # SAVE FACE IMAGE FOR ADMIN VERIFICATION
     import cv2

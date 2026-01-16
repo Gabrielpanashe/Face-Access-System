@@ -35,14 +35,15 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, status = 'idle
     const startCamera = useCallback(async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: 1280, height: 720 },
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: false
             });
             setStream(mediaStream);
             if (videoRef.current) videoRef.current.srcObject = mediaStream;
             setError(null);
         } catch (err) {
-            setError("Camera access denied.");
+            console.error("Camera error:", err);
+            setError("Camera access denied. Ensure you're using localhost and have granted permissions.");
         }
     }, []);
 

@@ -9,6 +9,9 @@ import { ArrowLeft, ShieldCheck, ShieldAlert, Power, Fingerprint } from 'lucide-
 export default function VerifyPage() {
     const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
     const [message, setMessage] = useState('');
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pinName, setPinName] = useState('');
+    const [pinCode, setPinCode] = useState('');
 
     const handleCapture = async (imageData: string) => {
         setStatus('processing');
@@ -34,6 +37,40 @@ export default function VerifyPage() {
             }
         } catch (err) {
             console.error('Verification error:', err);
+            setStatus('error');
+            setMessage('Network disruption.');
+        }
+    };
+
+    const handlePinSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!pinName || !pinCode) return;
+
+        setStatus('processing');
+        setMessage('VERIFYING_PIN...');
+        setShowPinModal(false);
+
+        try {
+            const formData = new FormData();
+            formData.append('name', pinName);
+            formData.append('pin', pinCode);
+
+            const response = await fetch('http://localhost:8000/api/verify-pin', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success' && data.access) {
+                setStatus('success');
+                setMessage(`Access Granted: ${data.identity}`);
+            } else {
+                setStatus('error');
+                setMessage(data.message || 'Invalid PIN.');
+            }
+        } catch (err) {
+            console.error('PIN Verification error:', err);
             setStatus('error');
             setMessage('Network disruption.');
         }
@@ -149,7 +186,77 @@ export default function VerifyPage() {
                             >
                                 Try_Again
                             </button>
+                            <button
+                                onClick={() => setShowPinModal(true)}
+                                className="w-full px-8 py-4 rounded-xl bg-white/5 border border-white/10 font-black text-xs uppercase tracking-[0.3em] hover:bg-white/10 transition-all text-primary"
+                            >
+                                Use_Alternative_PIN
+                            </button>
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* PIN Entry Modal */}
+            <AnimatePresence>
+                {showPinModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-[#020617]/95 backdrop-blur-2xl p-6"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="glass-morphism p-10 max-w-md w-full rounded-[2.5rem] border border-white/10 space-y-8"
+                        >
+                            <div className="text-center space-y-2">
+                                <h3 className="text-2xl font-black uppercase tracking-widest text-primary">Fallback_Access</h3>
+                                <p className="text-slate-500 text-sm">Enter registered name and security PIN</p>
+                            </div>
+
+                            <form onSubmit={handlePinSubmit} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="hud-label text-[10px] ml-2">Identifier</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Full Name"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-primary/50 text-white font-bold"
+                                        value={pinName}
+                                        onChange={(e) => setPinName(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="hud-label text-[10px] ml-2">Security_PIN</label>
+                                    <input
+                                        type="password"
+                                        maxLength={6}
+                                        placeholder="••••"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-primary/50 text-white font-bold tracking-[1em] text-center"
+                                        value={pinCode}
+                                        onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
+                                        required
+                                    />
+                                </div>
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPinModal(false)}
+                                        className="flex-1 px-6 py-4 rounded-xl border border-white/10 font-bold text-[10px] uppercase tracking-widest"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-[2] btn-primary"
+                                    >
+                                        Verify_Identity
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

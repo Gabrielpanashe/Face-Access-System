@@ -8,8 +8,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     # Store face embeddings as a list of floats (JSON serialized)
-    # This follows the requirement: "stores numerical face embeddings rather than real faces"
     face_embedding = Column(JSON, nullable=False)
+    # Store numeric PIN (4-6 digits) as string for flexibility
+    pin = Column(String, nullable=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

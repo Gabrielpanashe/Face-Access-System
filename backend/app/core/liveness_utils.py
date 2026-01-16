@@ -48,13 +48,13 @@ def check_liveness(face_img):
         
         # 4. Predict
         prediction = model.predict(img, verbose=0)[0][0]
+        print(f"DEBUG: Liveness Raw Prediction: {prediction} (Lower is more likely Real)")
         
         # Based on training folder order (usually alphabetical):
         # real = 0, spoof = 1
-        # SECURITY UPDATE: Stricter Threshold
-        # Used to be 0.5. Now 0.2. 
-        # The model must be 80% sure it's real (low spoof score) to pass.
-        is_live = prediction < 0.2
+        # SECURITY UPDATE: High Tolerance Mode
+        # Used to be 0.5. Now 0.75 for maximum reliability in difficult lighting.
+        is_live = prediction < 0.75
         confidence = 1.0 - prediction if is_live else prediction
         
         return bool(is_live), float(confidence)

@@ -81,3 +81,40 @@ async def verify_user(image: str = Form(...), db: Session = Depends(get_db)):
             "match_confidence": (1.0 - distance),
             "access": False
         }
+@router.post("/verify-pin")
+async def verify_pin(name: str = Form(...), pin: str = Form(...), db: Session = Depends(get_db)):
+    # Fetch user by name
+    user = db.query(models.User).filter(models.User.name == name).first()
+    
+    if not user:
+        return {
+            "status": "denied",
+            "identity": "Unknown",
+            "message": "User not found",
+            "access": False
+        }
+
+    # Verify PIN (Plain text comparison for simplicity as per user request "not deep things")
+    if user.pin == pin:
+        # Log access
+        access_log = models.AccessLog(
+            user_id=user.id,
+            status="granted_via_pin",
+            match_confidence=100
+        )
+        db.add(access_log)
+        db.commit()
+
+        return {
+            "status": "success",
+            "identity": user.name,
+            "message": "PIN Verified",
+            "access": True
+        }
+    else:
+        return {
+            "status": "denied",
+            "identity": user.name,
+            "message": "Invalid PIN",
+            "access": False
+        }
